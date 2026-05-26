@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="متجر ملابس رياضية وستريت وير للشباب في العراق.">
+    <title>{% block title %}{{ store_name }}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% if meta_pixel_id != "YOUR_PIXEL_ID" %}
+        <script>
+            !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+            n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+            (window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '{{ meta_pixel_id }}');
+            fbq('track', 'PageView');
+        </script>
+    {% endif %}
+</head>
+<body>
+    <header class="site-header">
+        <nav class="navbar">
+            <a class="brand" href="{{ url_for('index') }}">{{ store_name }}</a>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}">الرئيسية</a>
+                <a href="{{ url_for('products') }}">المنتجات</a>
+                <a href="{{ url_for('about') }}">من نحن</a>
+                <a href="{{ url_for('contact') }}">تواصل</a>
+                <a class="cart-link" href="{{ url_for('cart') }}">السلة {{ cart_count() }}</a>
+                {% if session.get("role") == "admin" %}
+                    <a href="{{ url_for('admin') }}">الإدارة</a>
+                {% endif %}
+                {% if session.get("user_id") %}
+                    <a href="{{ url_for('logout') }}">خروج</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}">دخول</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-area">
+                    {% for message in messages %}
+                        <p class="flash-message">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <p>{{ store_name }} - ملابس رياضية وستريت وير للشباب في العراق</p>
+        <p>دفع عند الاستلام | طلب سريع عبر واتساب</p>
+    </footer>
+</body>
+</html>

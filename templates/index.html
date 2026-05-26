@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{{ store_name }} | ملابس رياضية للشباب{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <p class="eyebrow">براند رياضي عراقي</p>
+        <h1>ستايل جيم وشارع للشباب.</h1>
+        <p>قطع نظيفة، خامات عملية، وإطلالة حديثة تناسب التمرين، كرة القدم، والطلعات اليومية.</p>
+        <div class="hero-actions">
+            <a class="button-link" href="{{ url_for('products') }}">تسوق الآن</a>
+            <a class="ghost-link" href="{{ url_for('contact') }}">اطلب عبر واتساب</a>
+        </div>
+    </div>
+</section>
+
+<section class="trust-strip">
+    <div>
+        <strong>توصيل داخل العراق</strong>
+        <span>طلب سريع ومتابعة مباشرة</span>
+    </div>
+    <div>
+        <strong>دفع عند الاستلام</strong>
+        <span>مناسب لأول طلب من البراند</span>
+    </div>
+    <div>
+        <strong>مقاسات واضحة</strong>
+        <span>اختيار سهل من صفحة المنتج</span>
+    </div>
+</section>
+
+<section class="page-section">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">مختارات البراند</p>
+            <h2>منتجات مميزة</h2>
+        </div>
+        <a href="{{ url_for('products') }}">عرض الكل</a>
+    </div>
+
+    <div class="product-grid">
+        {% for product in featured_products %}
+            {% include "partials/product_card.html" %}
+        {% endfor %}
+    </div>
+</section>
+
+<section class="brand-band">
+    <p class="eyebrow">لشباب 18-30</p>
+    <h2>تصميم نظيف للتمرين، الستريت وير، والمحتوى على إنستغرام.</h2>
+    <p>الصفحات مبنية لتكون سريعة على الموبايل ومناسبة لزيارات إعلانات Meta.</p>
+</section>
+{% endblock %}

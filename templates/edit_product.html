@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل المنتج | {{ store_name }}{% endblock %}
+
+{% block content %}
+<section class="form-page">
+    <form class="form-card wide-form" method="post">
+        <h1>تعديل المنتج</h1>
+
+        <label for="name">اسم المنتج</label>
+        <input type="text" id="name" name="name" value="{{ product['name'] }}" required>
+
+        <label for="price">السعر بالدينار العراقي</label>
+        <input type="number" id="price" name="price" step="500" min="0" value="{{ product['price'] }}" required>
+
+        <label for="category">التصنيف</label>
+        <input type="text" id="category" name="category" value="{{ product['category'] }}" required>
+
+        <label for="sizes">المقاسات المتوفرة</label>
+        <input type="text" id="sizes" name="sizes" value="{{ product['sizes'] }}" required>
+
+        <label for="image">مسار الصورة أو رابطها</label>
+        <input type="text" id="image" name="image" value="{{ product['image'] }}" required>
+
+        <label for="description">الوصف</label>
+        <textarea id="description" name="description" rows="5" required>{{ product['description'] }}</textarea>
+
+        <label class="checkbox-row">
+            <input type="checkbox" name="featured" {% if product['featured'] %}checked{% endif %}>
+            إظهار المنتج في الصفحة الرئيسية
+        </label>
+
+        <button type="submit">حفظ التغييرات</button>
+    </form>
+</section>
+{% endblock %}

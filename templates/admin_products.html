@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة المنتجات | {{ store_name }}{% endblock %}
+
+{% block content %}
+<section class="page-section page-top">
+    <div class="admin-header">
+        <div>
+            <p class="eyebrow">المنتجات</p>
+            <h1>إدارة المنتجات</h1>
+        </div>
+        <a class="button-link" href="{{ url_for('add_product') }}">إضافة منتج</a>
+    </div>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>الصورة</th>
+                    <th>الاسم</th>
+                    <th>التصنيف</th>
+                    <th>المقاسات</th>
+                    <th>السعر</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td><img class="table-image" src="{{ product_image_path(product['image']) }}" alt="{{ product['name'] }}"></td>
+                        <td>{{ product["name"] }}</td>
+                        <td>{{ product["category"] }}</td>
+                        <td>{{ product["sizes"] }}</td>
+                        <td>{{ format_price(product["price"]) }}</td>
+                        <td class="table-actions">
+                            <a href="{{ url_for('edit_product', product_id=product['id']) }}">تعديل</a>
+                            <form method="post" action="{{ url_for('delete_product', product_id=product['id']) }}">
+                                <button class="danger-button" type="submit" onclick="return confirm('هل تريد حذف هذا المنتج؟')">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6">لا توجد منتجات حاليا.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة الإدارة | {{ store_name }}{% endblock %}
+
+{% block content %}
+<section class="page-section page-top">
+    <div class="admin-header">
+        <div>
+            <p class="eyebrow">لوحة الإدارة</p>
+            <h1>إدارة المتجر</h1>
+        </div>
+        <div class="admin-links">
+            <a class="button-link" href="{{ url_for('admin_products') }}">المنتجات</a>
+            <a class="ghost-link dark" href="{{ url_for('admin_orders') }}">الطلبات</a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-box">
+            <span>عدد المنتجات</span>
+            <strong>{{ products_count }}</strong>
+        </div>
+        <div class="stat-box">
+            <span>عدد الطلبات</span>
+            <strong>{{ orders_count }}</strong>
+        </div>
+    </div>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>رقم الطلب</th>
+                    <th>العميل</th>
+                    <th>الهاتف</th>
+                    <th>المجموع</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in latest_orders %}
+                    <tr>
+                        <td>#{{ order["id"] }}</td>
+                        <td>{{ order["customer_name"] }}</td>
+                        <td>{{ order["phone"] }}</td>
+                        <td>{{ format_price(order["total"]) }}</td>
+                        <td>{{ order["status"] }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5">لا توجد طلبات حتى الآن.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

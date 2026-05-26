@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة الطلبات | {{ store_name }}{% endblock %}
+
+{% block content %}
+<section class="page-section page-top">
+    <div class="admin-header">
+        <div>
+            <p class="eyebrow">الطلبات</p>
+            <h1>إدارة الطلبات</h1>
+        </div>
+        <a class="ghost-link dark" href="{{ url_for('admin') }}">العودة للوحة</a>
+    </div>
+
+    <div class="orders-list">
+        {% for order in orders %}
+            <article class="order-panel">
+                <div class="order-head">
+                    <div>
+                        <strong>طلب #{{ order["id"] }}</strong>
+                        <span>{{ order["created_at"] }}</span>
+                    </div>
+                    <strong>{{ format_price(order["total"]) }}</strong>
+                </div>
+                <p>{{ order["customer_name"] }} - {{ order["phone"] }}</p>
+                <p>{{ order["city"] }} - {{ order["address"] }}</p>
+                {% if order["notes"] %}
+                    <p>ملاحظات: {{ order["notes"] }}</p>
+                {% endif %}
+
+                <ul class="order-items">
+                    {% for item in json.loads(order["items"]) %}
+                        <li>{{ item["name"] }} | {{ item["size"] }} | الكمية {{ item["quantity"] }}</li>
+                    {% endfor %}
+                </ul>
+
+                <form method="post" action="{{ url_for('update_order_status', order_id=order['id']) }}" class="status-form">
+                    <select name="status">
+                        {% for status in ["جديد", "تم التواصل", "قيد التوصيل", "مكتمل", "ملغي"] %}
+                            <option value="{{ status }}" {% if order["status"] == status %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit">تحديث الحالة</button>
+                </form>
+            </article>
+        {% else %}
+            <p class="empty-state">لا توجد طلبات حتى الآن.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

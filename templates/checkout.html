@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}إكمال الطلب | {{ store_name }}{% endblock %}
+
+{% block content %}
+<section class="form-page checkout-page">
+    <form class="form-card" method="post">
+        <h1>إكمال الطلب</h1>
+        <p class="form-note">أدخل بياناتك، وسيظهر الطلب في لوحة الإدارة.</p>
+
+        <label for="customer_name">الاسم الكامل</label>
+        <input type="text" id="customer_name" name="customer_name" required>
+
+        <label for="phone">رقم الهاتف</label>
+        <input type="text" id="phone" name="phone" required>
+
+        <label for="city">المحافظة / المدينة</label>
+        <input type="text" id="city" name="city" required>
+
+        <label for="address">العنوان</label>
+        <textarea id="address" name="address" rows="3" required></textarea>
+
+        <label for="notes">ملاحظات اختيارية</label>
+        <textarea id="notes" name="notes" rows="3"></textarea>
+
+        <div class="checkout-total">
+            <span>المجموع</span>
+            <strong>{{ format_price(total) }}</strong>
+        </div>
+
+        <button type="submit">تأكيد الطلب</button>
+    </form>
+</section>
+{% endblock %}

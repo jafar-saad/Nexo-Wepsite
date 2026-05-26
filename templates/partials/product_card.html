@@ -1,0 +1,14 @@
+<article class="product-card">
+    <a href="{{ url_for('product_details', product_id=product['id']) }}">
+        <img src="{{ product_image_path(product['image']) }}" alt="{{ product['name'] }}">
+    </a>
+    <div class="product-card-body">
+        <span class="product-category">{{ product["category"] }}</span>
+        <h3>{{ product["name"] }}</h3>
+        <p>{{ product["description"] }}</p>
+        <div class="product-card-footer">
+            <strong>{{ format_price(product["price"]) }}</strong>
+            <a href="{{ url_for('product_details', product_id=product['id']) }}">التفاصيل</a>
+        </div>
+    </div>
+</article>

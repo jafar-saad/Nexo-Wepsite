@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}إضافة منتج | {{ store_name }}{% endblock %}
+
+{% block content %}
+<section class="form-page">
+    <form class="form-card wide-form" method="post">
+        <h1>إضافة منتج</h1>
+
+        <label for="name">اسم المنتج</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="price">السعر بالدينار العراقي</label>
+        <input type="number" id="price" name="price" step="500" min="0" required>
+
+        <label for="category">التصنيف</label>
+        <input type="text" id="category" name="category" placeholder="تيشيرتات" required>
+
+        <label for="sizes">المقاسات المتوفرة</label>
+        <input type="text" id="sizes" name="sizes" placeholder="S,M,L,XL" required>
+
+        <label for="image">مسار الصورة أو رابطها</label>
+        <input type="text" id="image" name="image" placeholder="images/تيشيرت أحمر.png" required>
+
+        <label for="description">الوصف</label>
+        <textarea id="description" name="description" rows="5" required></textarea>
+
+        <label class="checkbox-row">
+            <input type="checkbox" name="featured" checked>
+            إظهار المنتج في الصفحة الرئيسية
+        </label>
+
+        <button type="submit">إضافة المنتج</button>
+    </form>
+</section>
+{% endblock %}

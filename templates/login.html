@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}تسجيل الدخول | {{ store_name }}{% endblock %}
+
+{% block content %}
+<section class="form-page">
+    <form class="form-card" method="post">
+        <h1>تسجيل الدخول</h1>
+        <p class="form-note">حساب المدير التجريبي: <strong>مدير</strong> / <strong>123456</strong></p>
+
+        <label for="username">اسم المستخدم</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="password">كلمة المرور</label>
+        <input type="password" id="password" name="password" required>
+
+        <button type="submit">دخول</button>
+        <p class="form-footer">ليس لديك حساب؟ <a href="{{ url_for('register') }}">أنشئ حسابا جديدا</a>.</p>
+    </form>
+</section>
+{% endblock %}

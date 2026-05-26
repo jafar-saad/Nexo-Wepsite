@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}السلة | {{ store_name }}{% endblock %}
+
+{% block content %}
+<section class="page-section page-top">
+    <h1>سلة الطلب</h1>
+
+    {% if items %}
+        <div class="cart-layout">
+            <div class="cart-items">
+                {% for item in items %}
+                    <article class="cart-item">
+                        <img src="{{ product_image_path(item['product']['image']) }}" alt="{{ item['product']['name'] }}">
+                        <div>
+                            <h3>{{ item["product"]["name"] }}</h3>
+                            <p>المقاس: {{ item["size"] }}</p>
+                            <p>{{ format_price(item["product"]["price"]) }}</p>
+                            <form method="post" action="{{ url_for('update_cart') }}" class="cart-actions">
+                                <input type="hidden" name="key" value="{{ item['key'] }}">
+                                <input type="number" name="quantity" value="{{ item['quantity'] }}" min="1">
+                                <button name="action" value="update" type="submit">تحديث</button>
+                                <button class="danger-button" name="action" value="remove" type="submit">حذف</button>
+                            </form>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+
+            <aside class="summary-panel">
+                <h2>ملخص الطلب</h2>
+                <p>المجموع</p>
+                <strong>{{ format_price(total) }}</strong>
+                <a class="button-link" href="{{ url_for('checkout') }}">إكمال الطلب</a>
+                <a class="ghost-link dark" href="{{ whatsapp_link }}" target="_blank">طلب عبر واتساب</a>
+            </aside>
+        </div>
+    {% else %}
+        <p class="empty-state">السلة فارغة حاليا.</p>
+        <a class="button-link" href="{{ url_for('products') }}">تصفح المنتجات</a>
+    {% endif %}
+</section>
+{% endblock %}

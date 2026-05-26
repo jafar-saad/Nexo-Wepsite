@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}تم استلام الطلب | {{ store_name }}{% endblock %}
+
+{% block content %}
+<section class="page-section success-page">
+    <p class="eyebrow">تم استلام الطلب</p>
+    <h1>طلبك رقم #{{ order["id"] }} وصلنا بنجاح.</h1>
+    <p>اضغط زر واتساب لإرسال تفاصيل الطلب مباشرة وتأكيده مع الفريق.</p>
+    <a class="button-link" href="{{ whatsapp_link }}" target="_blank">تأكيد عبر واتساب</a>
+    <a class="ghost-link dark" href="{{ url_for('products') }}">العودة للمنتجات</a>
+</section>
+{% endblock %}

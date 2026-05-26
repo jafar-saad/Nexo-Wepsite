@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product["name"] }} | {{ store_name }}{% endblock %}
+
+{% block content %}
+<section class="product-detail">
+    <div class="product-media">
+        <img src="{{ product_image_path(product['image']) }}" alt="{{ product['name'] }}">
+    </div>
+    <div class="product-info">
+        <span class="product-category">{{ product["category"] }}</span>
+        <h1>{{ product["name"] }}</h1>
+        <p>{{ product["description"] }}</p>
+        <strong class="detail-price">{{ format_price(product["price"]) }}</strong>
+
+        <form method="post" action="{{ url_for('add_to_cart', product_id=product['id']) }}" class="buy-form">
+            <label>
+                اختر المقاس
+                <div class="size-options">
+                    {% for size in product["sizes"].split(",") %}
+                        <label class="size-pill">
+                            <input type="radio" name="size" value="{{ size }}" required>
+                            <span>{{ size }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </label>
+
+            <label>
+                الكمية
+                <input type="number" name="quantity" value="1" min="1">
+            </label>
+
+            <button type="submit">أضف إلى السلة</button>
+        </form>
+    </div>
+</section>
+{% endblock %}
