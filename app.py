@@ -25,7 +25,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.path.join(BASE_DIR, "database.db")
 
 # عدل هذه القيم عند إطلاق المتجر الحقيقي.
-STORE_NAME = "STORM FIT"
+STORE_NAME = "NEXO"
 WHATSAPP_NUMBER = "9647891040488"
 META_PIXEL_ID = "YOUR_PIXEL_ID"
 
@@ -75,6 +75,12 @@ def create_tables():
         "category": "TEXT NOT NULL DEFAULT 'تيشيرتات'",
         "sizes": "TEXT NOT NULL DEFAULT 'S,M,L,XL'",
         "featured": "INTEGER NOT NULL DEFAULT 1",
+        "image_2": "TEXT DEFAULT ''",
+        "image_3": "TEXT DEFAULT ''",
+        "image_4": "TEXT DEFAULT ''",
+        "image_5": "TEXT DEFAULT ''",
+        "image_6": "TEXT DEFAULT ''",
+        "size_chart": "TEXT DEFAULT ''",
     }
     for column_name, column_sql in extra_product_columns.items():
         if not column_exists(conn, "products", column_name):
@@ -188,10 +194,181 @@ def admin_required(view_function):
 
 
 def product_image_path(image):
-    """إرجاع رابط الصورة سواء كانت محلية أو رابطا كاملا."""
+    """????? ???? ?????? ???? ???? ????? ?? ????? ?????."""
+    if not image:
+        return ""
     if image.startswith("http://") or image.startswith("https://"):
         return image
     return url_for("static", filename=image)
+
+
+def product_gallery(product):
+    """????? ???? ??? ?????? ??? ???? ?? ???."""
+    images = [product["image"]]
+    for column_name in ["image_2", "image_3", "image_4", "image_5", "image_6"]:
+        if column_name in product.keys() and product[column_name]:
+            images.append(product[column_name])
+    return images[:6]
+
+
+SIZE_CHART_FORM_SIZES = ["S", "M", "L", "XL", "XXL"]
+SIZE_CHART_FORM_LABELS = {
+    "S": "Small (S)",
+    "M": "Medium (M)",
+    "L": "Large (L)",
+    "XL": "X-Large (XL)",
+    "XXL": "XX-Large (XXL)",
+}
+SIZE_CHART_DEFAULT_TITLE = "\u0642\u064a\u0627\u0633\u0627\u062a \u0627\u0644\u0645\u0646\u062a\u062c \u0628\u0627\u0644\u0633\u0646\u062a\u064a\u0645\u062a\u0631"
+SIZE_CHART_SIZE_HEADER = "\u0627\u0644\u0645\u0642\u0627\u0633"
+SIZE_CHART_DEFAULT_COLUMNS = [
+    "\u0627\u0644\u0635\u062f\u0631",
+    "\u0627\u0644\u0637\u0648\u0644",
+    "\u0627\u0644\u0643\u062a\u0641",
+    "\u0637\u0648\u0644 \u0627\u0644\u0643\u0645",
+]
+
+
+def split_form_values(value):
+    """Split comma-separated admin input while ignoring empty pieces."""
+    return [part.strip() for part in (value or "").split(",") if part.strip()]
+
+
+def build_size_chart_from_form(form):
+    """Build a JSON size chart from the admin product form."""
+    title = form.get("size_chart_title", "").strip() or SIZE_CHART_DEFAULT_TITLE
+    columns = split_form_values(form.get("size_chart_columns", ""))
+    rows = []
+
+    for size in SIZE_CHART_FORM_SIZES:
+        field_name = f"size_chart_{size.lower()}"
+        values = split_form_values(form.get(field_name, ""))
+        if values and not columns:
+            columns = SIZE_CHART_DEFAULT_COLUMNS[: len(values)]
+        if not values:
+            continue
+
+        normalized_values = values[: len(columns)]
+        while len(normalized_values) < len(columns):
+            normalized_values.append("")
+        if any(normalized_values):
+            rows.append([size] + normalized_values)
+
+    if not columns or not rows:
+        return ""
+
+    chart = {
+        "title": title,
+        "headers": [SIZE_CHART_SIZE_HEADER] + columns,
+        "rows": rows,
+    }
+    return json.dumps(chart, ensure_ascii=False)
+
+
+def load_custom_size_chart(product):
+    """Read a saved size chart from the database when one exists."""
+    if "size_chart" not in product.keys() or not product["size_chart"]:
+        return None
+
+    try:
+        data = json.loads(product["size_chart"])
+    except (TypeError, json.JSONDecodeError):
+        return None
+
+    headers = [str(header).strip() for header in data.get("headers", []) if str(header).strip()]
+    rows = []
+    for row in data.get("rows", []):
+        cleaned_row = [str(value).strip() for value in row]
+        if len(cleaned_row) >= 2 and any(cleaned_row[1:]):
+            rows.append(cleaned_row)
+
+    if len(headers) < 2 or not rows:
+        return None
+
+    return {
+        "title": str(data.get("title") or SIZE_CHART_DEFAULT_TITLE).strip(),
+        "headers": headers,
+        "rows": rows,
+    }
+
+
+def size_chart_form(product=None):
+    """Prepare size chart values for add/edit product forms."""
+    chart = load_custom_size_chart(product) if product else None
+    if chart is None and product is not None:
+        chart = size_chart_for_product(product)
+
+    columns = SIZE_CHART_DEFAULT_COLUMNS
+    rows = {size: "" for size in SIZE_CHART_FORM_SIZES}
+    title = SIZE_CHART_DEFAULT_TITLE
+
+    if chart and chart.get("headers"):
+        title = chart.get("title") or title
+        columns = chart["headers"][1:] or columns
+        for row in chart.get("rows", []):
+            size = str(row[0]).strip().upper()
+            if size in rows:
+                rows[size] = ",".join(str(value).strip() for value in row[1:])
+
+    return {
+        "title": title,
+        "columns": ",".join(columns),
+        "sizes": SIZE_CHART_FORM_SIZES,
+        "labels": SIZE_CHART_FORM_LABELS,
+        "rows": rows,
+    }
+
+
+def size_chart_for_product(product):
+    """Return a saved or automatic centimeter size chart for a product."""
+    custom_chart = load_custom_size_chart(product)
+    if custom_chart:
+        return custom_chart
+
+    product_text = f"{product['name']} {product['category']}".lower()
+    sizes = [size.strip().upper() for size in product["sizes"].split(",") if size.strip()]
+    if not sizes:
+        sizes = ["S", "M", "L", "XL"]
+
+    charts = {
+        "shirt": {
+            "title": "\u0642\u064a\u0627\u0633\u0627\u062a \u0627\u0644\u062a\u064a\u0634\u064a\u0631\u062a \u0628\u0627\u0644\u0633\u0646\u062a\u064a\u0645\u062a\u0631",
+            "headers": ["\u0627\u0644\u0645\u0642\u0627\u0633", "\u0627\u0644\u0635\u062f\u0631", "\u0627\u0644\u0637\u0648\u0644", "\u0627\u0644\u0643\u062a\u0641", "\u0637\u0648\u0644 \u0627\u0644\u0643\u0645"],
+            "values": {"XS": [46, 66, 40, 19], "S": [49, 69, 42, 20], "M": [52, 72, 44, 21], "L": [55, 75, 46, 22], "XL": [58, 78, 48, 23], "XXL": [61, 81, 50, 24]},
+        },
+        "hoodie": {
+            "title": "\u0642\u064a\u0627\u0633\u0627\u062a \u0627\u0644\u0647\u0648\u062f\u064a \u0628\u0627\u0644\u0633\u0646\u062a\u064a\u0645\u062a\u0631",
+            "headers": ["\u0627\u0644\u0645\u0642\u0627\u0633", "\u0627\u0644\u0635\u062f\u0631", "\u0627\u0644\u0637\u0648\u0644", "\u0627\u0644\u0643\u062a\u0641", "\u0637\u0648\u0644 \u0627\u0644\u0643\u0645"],
+            "values": {"S": [54, 68, 48, 61], "M": [57, 71, 50, 63], "L": [60, 74, 52, 65], "XL": [63, 77, 54, 67], "XXL": [66, 80, 56, 69]},
+        },
+        "shorts": {
+            "title": "\u0642\u064a\u0627\u0633\u0627\u062a \u0627\u0644\u0634\u0648\u0631\u062a \u0628\u0627\u0644\u0633\u0646\u062a\u064a\u0645\u062a\u0631",
+            "headers": ["\u0627\u0644\u0645\u0642\u0627\u0633", "\u0627\u0644\u062e\u0635\u0631", "\u0627\u0644\u0637\u0648\u0644", "\u0627\u0644\u0648\u0631\u0643"],
+            "values": {"S": [72, 43, 100], "M": [78, 45, 106], "L": [84, 47, 112], "XL": [90, 49, 118], "XXL": [96, 51, 124]},
+        },
+        "tracksuit": {
+            "title": "\u0642\u064a\u0627\u0633\u0627\u062a \u0627\u0644\u062f\u0631\u064a\u0633 \u0627\u0644\u0631\u064a\u0627\u0636\u064a \u0628\u0627\u0644\u0633\u0646\u062a\u064a\u0645\u062a\u0631",
+            "headers": ["\u0627\u0644\u0645\u0642\u0627\u0633", "\u0635\u062f\u0631 \u0627\u0644\u062c\u0627\u0643\u064a\u062a", "\u0637\u0648\u0644 \u0627\u0644\u062c\u0627\u0643\u064a\u062a", "\u062e\u0635\u0631 \u0627\u0644\u0628\u0646\u0637\u0627\u0644", "\u0637\u0648\u0644 \u0627\u0644\u0628\u0646\u0637\u0627\u0644"],
+            "values": {"S": [52, 66, 72, 96], "M": [55, 69, 78, 99], "L": [58, 72, 84, 102], "XL": [61, 75, 90, 105], "XXL": [64, 78, 96, 108]},
+        },
+    }
+
+    if any(word in product_text for word in ["\u0634\u0648\u0631\u062a", "short"]):
+        chart = charts["shorts"]
+    elif any(word in product_text for word in ["\u0647\u0648\u062f\u064a", "hoodie"]):
+        chart = charts["hoodie"]
+    elif any(word in product_text for word in ["\u062f\u0631\u064a\u0633", "\u0637\u0642\u0645", "tracksuit", "set"]):
+        chart = charts["tracksuit"]
+    else:
+        chart = charts["shirt"]
+
+    rows = []
+    for size in sizes:
+        values = chart["values"].get(size)
+        if values:
+            rows.append([size] + values)
+
+    return {"title": chart["title"], "headers": chart["headers"], "rows": rows}
 
 
 def format_price(price):
@@ -219,7 +396,6 @@ def get_cart_items():
         product = conn.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
         if product is None:
             continue
-
         item_total = product["price"] * quantity
         total += item_total
         items.append(
@@ -269,6 +445,9 @@ def create_whatsapp_link(order=None, items=None, total=0):
 
 app.jinja_env.globals.update(
     product_image_path=product_image_path,
+    product_gallery=product_gallery,
+    size_chart_for_product=size_chart_for_product,
+    size_chart_form=size_chart_form,
     format_price=format_price,
     cart_count=cart_count,
     store_name=STORE_NAME,
@@ -363,6 +542,9 @@ def add_to_cart(product_id):
     session.modified = True
 
     flash("تمت إضافة المنتج إلى السلة.")
+    next_url = request.form.get("next")
+    if next_url:
+        return redirect(next_url)
     return redirect(url_for("cart"))
 
 
@@ -561,10 +743,16 @@ def add_product():
         name = request.form["name"].strip()
         price = request.form["price"]
         image = request.form["image"].strip()
+        image_2 = request.form.get("image_2", "").strip()
+        image_3 = request.form.get("image_3", "").strip()
+        image_4 = request.form.get("image_4", "").strip()
+        image_5 = request.form.get("image_5", "").strip()
+        image_6 = request.form.get("image_6", "").strip()
         category = request.form["category"].strip()
         sizes = request.form["sizes"].strip()
         description = request.form["description"].strip()
         featured = 1 if request.form.get("featured") else 0
+        size_chart = build_size_chart_from_form(request.form)
 
         if not name or not price or not image or not category or not sizes or not description:
             flash("جميع الحقول مطلوبة.")
@@ -573,10 +761,27 @@ def add_product():
         conn = get_db_connection()
         conn.execute(
             """
-            INSERT INTO products (name, price, image, description, category, sizes, featured)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO products (
+                name, price, image, image_2, image_3, image_4, image_5, image_6,
+                description, category, sizes, featured, size_chart
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (name, price, image, description, category, sizes, featured),
+            (
+                name,
+                price,
+                image,
+                image_2,
+                image_3,
+                image_4,
+                image_5,
+                image_6,
+                description,
+                category,
+                sizes,
+                featured,
+                size_chart,
+            ),
         )
         conn.commit()
         conn.close()
@@ -584,7 +789,7 @@ def add_product():
         flash("تمت إضافة المنتج بنجاح.")
         return redirect(url_for("admin_products"))
 
-    return render_template("add_product.html")
+    return render_template("add_product.html", chart_form=size_chart_form())
 
 
 @app.route("/admin/edit/<int:product_id>", methods=("GET", "POST"))
@@ -603,10 +808,16 @@ def edit_product(product_id):
         name = request.form["name"].strip()
         price = request.form["price"]
         image = request.form["image"].strip()
+        image_2 = request.form.get("image_2", "").strip()
+        image_3 = request.form.get("image_3", "").strip()
+        image_4 = request.form.get("image_4", "").strip()
+        image_5 = request.form.get("image_5", "").strip()
+        image_6 = request.form.get("image_6", "").strip()
         category = request.form["category"].strip()
         sizes = request.form["sizes"].strip()
         description = request.form["description"].strip()
         featured = 1 if request.form.get("featured") else 0
+        size_chart = build_size_chart_from_form(request.form)
 
         if not name or not price or not image or not category or not sizes or not description:
             flash("جميع الحقول مطلوبة.")
@@ -616,10 +827,37 @@ def edit_product(product_id):
         conn.execute(
             """
             UPDATE products
-            SET name = ?, price = ?, image = ?, description = ?, category = ?, sizes = ?, featured = ?
+            SET name = ?,
+                price = ?,
+                image = ?,
+                image_2 = ?,
+                image_3 = ?,
+                image_4 = ?,
+                image_5 = ?,
+                image_6 = ?,
+                description = ?,
+                category = ?,
+                sizes = ?,
+                featured = ?,
+                size_chart = ?
             WHERE id = ?
             """,
-            (name, price, image, description, category, sizes, featured, product_id),
+            (
+                name,
+                price,
+                image,
+                image_2,
+                image_3,
+                image_4,
+                image_5,
+                image_6,
+                description,
+                category,
+                sizes,
+                featured,
+                size_chart,
+                product_id,
+            ),
         )
         conn.commit()
         conn.close()
@@ -628,7 +866,7 @@ def edit_product(product_id):
         return redirect(url_for("admin_products"))
 
     conn.close()
-    return render_template("edit_product.html", product=product)
+    return render_template("edit_product.html", product=product, chart_form=size_chart_form(product))
 
 
 @app.route("/admin/delete/<int:product_id>", methods=("POST",))
@@ -666,4 +904,6 @@ def update_order_status(order_id):
 
 if __name__ == "__main__":
     create_tables()
-    app.run(debug=True, use_reloader=False)
+    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
+
+
